@@ -1,38 +1,34 @@
-const net = require('net');
+const express = require('express');
+const http = require('http');
+const socketIO = require('socket.io');
+const cors = require('cors');
 
-const host = '192.168.1.45'; 
-const port = 1204; 
+const app = express();
+const server = http.createServer(app);
+const io = socketIO(server);
 
-const server = net.createServer({ host: host }, (socket) => {
-  // New client connection
-  console.log('Client connected:', socket.remoteAddress, socket.remotePort);
+// Use CORS middleware
+app.use(cors({
+  origin: 'http://localhost:3000',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true
+}));
+// Socket.io server setup
+io.on('connection', (socket) => {
+  console.log('Client connected:', socket.handshake.address);
 
-  socket.on('data', (data) => {
-    // Received data from the client
-    console.log('Received data:', data.toString());
-    socket.emit('msg',(data)=>{
-      console.log('Received data:', data.toString());
-    })
-   
+  socket.on('dataFromClient', (data) => {
+    console.log('Received data from client:', data);
+    // Handle data from the client
+    // You can emit data back to the client using socket.emit or io.emit
   });
 
-  socket.on('end', () => {
-    // Client disconnected
+  socket.on('disconnect', () => {
     console.log('Client disconnected');
   });
-
-  socket.on('error', (err) => {
-    // Handle errors
-    console.error('Socket error:', err);
-  });
 });
 
-server.on('error', (err) => {
-  // Handle server errors
-  console.error('Server error:', err);
-});
-
-server.listen(port, host, () => {
-  // Server is listening
-  console.log(`Server listening on ${host}:${port}`);
+// Start the server
+server.listen(1204, () => {
+  console.log('Socket.io server listening on port 5399');
 });
